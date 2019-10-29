@@ -13,7 +13,7 @@
 
 ## Learning Laravel Queue
 
-Laravel queue setup will process in background and user will get quick response in foreground. Laravel Queue officical doc can be fond [here](https://laravel.com/docs/5.8/queues)
+Laravel queue setup will process in background and user will get quick response in foreground. Laravel Queue officical doc can be found [here](https://laravel.com/docs/5.8/queues)
 
 ## Basic Requirements
 
