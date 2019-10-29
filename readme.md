@@ -7,59 +7,78 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
 </p>
 
-## About Laravel
+## About Laravel Queue
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+“Queues allow you to defer the processing of a time consuming task, such as sending an email, at a later time. By these time consuming tasks will speeds up web requests to your application.”
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Learning Laravel Queue
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+Laravel queue setup will process in background and user will get quick response in foreground. Laravel Queue officical doc can be fond [here](https://laravel.com/docs/5.8/queues)
 
-## Learning Laravel
+## Basic Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+In .env file add / edit following value
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+**QUEUE_DRIVER=database**
 
-## Laravel Sponsors
+Create required tables for job using migration. Run the below commands
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+**php artisan queue:table**
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
+**php artisan queue:failed-table**
 
-## Contributing
+**php artisan migrate**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Then create a neccessary route and controller function for mail function, where we going to call job with time delay.
 
-## Security Vulnerabilities
+Create a job using command,
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**php artisan make:job Jobname**
 
-## License
+After dispatching the job, you can check the job execution using the following command,
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**php artisan queue:work --tries=1**
+
+If everything is set!, and you go to live. Then queue should run automatically in background without executing the above work command. For this we need to setup the **supervisor**
+
+## Supervisor Installation
+
+Supervisor can be installed in ubuntu/linux server that will automatically execute the queue in server level. To install supervisor, execute the following command.
+
+**sudo apt-get install supervisor**
+
+Then goto the path **/etc/supervisor/conf.d**. There let’s create a **laravel-worker.conf**
+
+In the above laravel-worker.conf file, paste the follwoing lines,
+
+```[program:laravel-worker]
+
+process_name=%(program_name)s_%(process_num)02d
+
+command=php /home/forge/app.com/artisan queue:work --tries=3
+
+autostart=true
+
+autorestart=true
+
+user=forge
+
+numprocs=8
+
+redirect_stderr=true
+
+stdout_logfile=/home/forge/app.com/storage/logs/supervisord.log
+```
+
+- **/home/forge/app.com/** this is your project folder path
+- **user** this is your server username
+
+After saving the above file, need to update and start the supervisor. Run the follwoing command.
+
+**sudo supervisorctl reread**
+
+**sudo supervisorctl update**
+
+**sudo supervisorctl start laravel-worker:***
+
+If you change laravel-worker.conf file, then every time you have to run the above commands to update the supervisor.
